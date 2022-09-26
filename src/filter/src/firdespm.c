@@ -334,7 +334,7 @@ firdespm firdespm_create_callback(unsigned int          _h_len,
     // validate input
     unsigned int i;
     int bands_valid = 1;
-    // ensure bands are withing [0,0.5]
+    // ensure bands are within [0,0.5]
     for (i=0; i<2*_num_bands; i++)
         bands_valid &= _bands[i] >= 0.0 && _bands[i] <= 0.5;
     // ensure bands are non-decreasing
@@ -999,6 +999,38 @@ int firdespm_output_debug_file(firdespm _q)
 
     fclose(fid);
     printf("internal debugging results written to %s.\n", LIQUID_FIRDESPM_DEBUG_FILENAME);
+    return LIQUID_OK;
+}
+#endif
+
+#if 0
+// design halfband filter using Parks-McClellan algorithm given the
+// filter length and desired transition band
+int liquid_firdespm_halfband_ft(unsigned int _m,
+                                float        _ft,
+                                float *      _h)
+{
+    liquid_firdespm_btype btype = LIQUID_FIRDESPM_BANDPASS;
+    unsigned int h_len = 4*_m + 1;
+    unsigned int num_bands = 2;
+    float f0 = 0.25f - 0.5f*_ft;
+    float f1 = 0.25f + 0.5f*_ft;
+    float bands[4]   = {0.0f, f0, f1, 0.5f};
+    float des[2]     = {1.0f, 0.0f};
+    float weights[2] = {1.0f, 1.0f}; // best with {1, 1}
+    liquid_firdespm_wtype wtype[2] = { // best with {flat, flat}
+        LIQUID_FIRDESPM_FLATWEIGHT, LIQUID_FIRDESPM_FLATWEIGHT,};
+
+    // design filter
+    firdespm_run(h_len,num_bands,bands,des,weights,wtype,btype,_h);
+#if 0
+    // ensure values at odd indices are 0 (excepting center value)
+    unsigned int i;
+    for (i=0; i<_m; i++) {
+        _h[        2*i] = 0;
+        _h[h_len-2*i-1] = 0;
+    }
+#endif
     return LIQUID_OK;
 }
 #endif
